@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pocket Food Tracker</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="theme-color" content="#2463eb" />
+  <style>
+    :root {
+      --bg: #0b1220;
+      --card: #111a2e;
+      --muted: #0f172a;
+      --text: #e5e7eb;
+      --sub: #94a3b8;
+      --primary: #2463eb;
+      --danger: #ef4444;
+      --ringbg: #2a3759;
+    }
+    *{box-sizing:border-box;font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;}
+    body{margin:0;background:linear-gradient(0deg,#0a1020,#0b1220);color:var(--text)}
+    header{position:sticky;top:0;backdrop-filter:saturate(1.1) blur(6px);background:#0b1220cc;border-bottom:1px solid #1f2a44}
+    .wrap{max-width:1000px;margin:0 auto;padding:12px 16px}
+    .brand{display:flex;align-items:center;gap:10px}
+    .logo{width:36px;height:36px;border-radius:12px;background:#1d4ed880;display:flex;align-items:center;justify-content:center}
+    .logo span{font-weight:800;color:#93c5fd}
+    .title{line-height:1}
+    .title h1{font-size:18px;margin:0 0 2px 0}
+    .title p{margin:0;color:var(--sub);font-size:12px}
+    .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+    .btn{appearance:none;border:1px solid #273559;background:#121a2d;color:var(--text);padding:8px 10px;border-radius:10px;cursor:pointer}
+    .btn.primary{background:var(--primary);border-color:#2147a7}
+    .btn.danger{border-color:#5c1e1e;background:#2b1212;color:#fecaca}
+    .btn.ghost{border-color:transparent;background:transparent}
+    .btn:disabled{opacity:.5;cursor:not-allowed}
+    input, select, textarea{width:100%;padding:8px 10px;border-radius:10px;border:1px solid #273559;background:#0d1527;color:var(--text)}
+    label{display:block;font-size:12px;color:var(--sub);margin-bottom:4px}
+    .grid{display:grid;gap:12px}
+    .card{background:var(--card);border:1px solid #1f2a44;border-radius:16px;box-shadow:0 6px 20px #00000030}
+    .card .content{padding:14px}
+    .rings{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+    .macros{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+    .bar{height:8px;background:#233154;border-radius:999px;overflow:hidden}
+    .bar > span{display:block;height:100%;background:var(--primary)}
+    table{width:100%;border-collapse:collapse}
+    th, td{padding:8px 10px;border-bottom:1px solid #1a2442;text-align:left;font-size:14px}
+    .muted{color:var(--sub)}
+    .footer{color:var(--sub);text-align:center;padding:28px 8px}
+    .badge{font-size:11px;padding:4px 8px;border-radius:999px;background:#1e293b;color:#e2e8f0;border:1px solid #26354d}
+    .flex{display:flex;gap:8px;align-items:center}
+    .space{justify-content:space-between}
+    .hidden{display:none}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap space brand">
+      <div class="flex">
+        <div class="logo"><span>Φ</span></div>
+        <div class="title">
+          <h1>Pocket Food Tracker</h1>
+          <p>Offline-first calories & macros</p>
+        </div>
+      </div>
+      <div class="row">
+        <button class="btn" id="btn-goals">Goals</button>
+        <button class="btn" id="btn-export-csv">CSV</button>
+        <button class="btn" id="btn-export-json">JSON</button>
+        <label class="btn"><input type="file" id="import-json" accept="application/json" class="hidden"/>Import</label>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap grid" style="padding:16px">
+    <div class="card">
+      <div class="content grid">
+        <div class="row space">
+          <div class="flex">
+            <label for="date" class="muted" style="margin-right:8px">Date</label>
+            <input type="date" id="date" style="width:170px"/>
+          </div>
+          <div class="muted">Calories left today: <b id="cal-left">0</b></div>
+          <div class="row">
+            <button class="btn" id="copy-prev">Copy previous day</button>
+            <button class="btn danger" id="clear-day">Clear day</button>
+          </div>
+        </div>
+
+        <div class="rings" id="rings"></div>
+        <div class="macros" id="macro-bars"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="content grid">
+        <h2 style="margin:0">Add food</h2>
+        <div class="grid" style="grid-template-columns: repeat(auto-fit,minmax(160px,1fr))">
+          <div>
+            <label>Meal</label>
+            <select id="meal">
+              <option>Breakfast</option>
+              <option>Lunch</option>
+              <option>Dinner</option>
+              <option>Snack</option>
+            </select>
+          </div>
+          <div>
+            <label>Name</label>
+            <input id="name" placeholder="e.g., Chicken breast"/>
+          </div>
+          <div>
+            <label>Calories</label>
+            <input id="calories" type="number" inputmode="decimal" placeholder="kcal"/>
+          </div>
+          <div>
+            <label>Protein (g)</label>
+            <input id="protein" type="number" inputmode="decimal" placeholder="g"/>
+          </div>
+          <div>
+            <label>Carbs (g)</label>
+            <input id="carbs" type="number" inputmode="decimal" placeholder="g"/>
+          </div>
+          <div>
+            <label>Fat (g)</label>
+            <input id="fat" type="number" inputmode="decimal" placeholder="g"/>
+          </div>
+          <div>
+            <label>Qty (optional)</label>
+            <input id="qty" placeholder="e.g., 150 g"/>
+          </div>
+          <div>
+            <label>Notes</label>
+            <input id="notes" placeholder="brand, recipe, method..."/>
+          </div>
+        </div>
+        <div class="row space">
+          <div class="row">
+            <button class="btn" data-q='{"name":"Chicken breast 150 g","calories":248,"protein":46,"carbs":0,"fat":5,"qty":"150 g"}'>Chicken 150g</button>
+            <button class="btn" data-q='{"name":"Cooked rice 1 cup","calories":206,"protein":4.3,"carbs":45,"fat":0.4,"qty":"1 cup"}'>Rice 1c</button>
+            <button class="btn" data-q='{"name":"Eggs (2)","calories":156,"protein":12.6,"carbs":1.2,"fat":10.6,"qty":"2 eggs"}'>Eggs (2)</button>
+            <button class="btn" data-q='{"name":"Oats 50 g","calories":194,"protein":8,"carbs":33,"fat":4,"qty":"50 g"}'>Oats 50g</button>
+          </div>
+          <div class="row">
+            <button class="btn primary" id="save">Save</button>
+            <button class="btn" id="cancel">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="content">
+        <div class="row space">
+          <h2 style="margin:0">Today’s Log</h2>
+          <div class="muted" id="count"></div>
+        </div>
+        <div id="log"></div>
+        <div class="row" style="padding-top:10px;gap:18px">
+          <div>Calories: <b id="tcal">0</b></div>
+          <div>Protein: <b id="tpro">0 g</b></div>
+          <div>Carbs: <b id="tcarb">0 g</b></div>
+          <div>Fat: <b id="tfat">0 g</b></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="content">
+        <h2 style="margin:0 0 10px 0">History</h2>
+        <div id="history"></div>
+      </div>
+    </div>
+    <div class="footer">Data stays in your browser. Works offline after first load.</div>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(()=>{});
+      });
+    }
+  </script>
+</body>
+</html>
